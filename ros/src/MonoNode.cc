@@ -28,12 +28,15 @@ int main(int argc, char **argv)
 MonoNode::MonoNode (ORB_SLAM2::System::eSensor sensor, ros::NodeHandle &node_handle, image_transport::ImageTransport &image_transport) : Node (sensor, node_handle, image_transport) {
   image_subscriber = image_transport.subscribe ("/camera/image_raw", 1, &MonoNode::ImageCallback, this);
   camera_info_topic_ = "/camera/camera_info";
+  // Odometry subscriber
+  odom_subscriber = node_handle.subscribe("/odom", 1, &MonoNode::OdomCallback, this);
+  // Frame offset to compensate (ORB-SLAM init load time)
+  frame = 45;
 }
 
 
 MonoNode::~MonoNode () {
 }
-
 
 void MonoNode::ImageCallback (const sensor_msgs::ImageConstPtr& msg) {
   cv_bridge::CvImageConstPtr cv_in_ptr;
@@ -43,10 +46,20 @@ void MonoNode::ImageCallback (const sensor_msgs::ImageConstPtr& msg) {
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
   }
-
   current_frame_time_ = msg->header.stamp;
+  // Wait for odometry topic to appear (Map initialization)
+  if(odom_ptr != NULL){
+    orb_slam_->TrackMonocularAlt(cv_in_ptr->image,cv_in_ptr->header.stamp.toSec(), odom_ptr);
+    // double s = UpdateScaleFactor(odom_ptr);
+    UpdateAlt(frame);
+  }
+  frame++;
+}
 
-  orb_slam_->TrackMonocular(cv_in_ptr->image,cv_in_ptr->header.stamp.toSec());
-
-  Update ();
+//* Odometry Callback
+void MonoNode::OdomCallback(const nav_msgs::Odometry::Ptr& msg){
+  odom_ptr = msg;
+  //ROS_INFO("Position-> x: [%f], y: [%f], z: [%f]", msg->pose.pose.position.x,msg->pose.pose.position.y, msg->pose.pose.position.z);
+  //ROS_INFO("Orientation-> x: [%f], y: [%f], z: [%f], w: [%f]", msg->pose.pose.orientation.x, msg->pose.pose.orientation.y, msg->pose.pose.orientation.z, msg->pose.pose.orientation.w);
+  //ROS_INFO("Vel-> Linear: [%f], Angular: [%f]", msg->twist.twist.linear.x,msg->twist.twist.angular.z);
 }
