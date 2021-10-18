@@ -30,7 +30,7 @@ MonoNode::MonoNode (ORB_SLAM2::System::eSensor sensor, ros::NodeHandle &node_han
   camera_info_topic_ = "/camera/camera_info";
   // Odometry subscriber
   odom_subscriber = node_handle.subscribe("/odom", 1, &MonoNode::OdomCallback, this);
-  // Frame offset to compensate (ORB-SLAM init load time)
+  // Frame offset to compensate ORB-SLAM init load time
   frame = 45;
 }
 
