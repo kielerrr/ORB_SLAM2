@@ -48,11 +48,11 @@ void MonoNode::ImageCallback (const sensor_msgs::ImageConstPtr& msg) {
   }
   current_frame_time_ = msg->header.stamp;
   // Wait for odometry topic to appear (Map initialization)
-  if(odom_ptr != NULL){
-    orb_slam_->TrackMonocularAlt(cv_in_ptr->image,cv_in_ptr->header.stamp.toSec(), odom_ptr);
-    // double s = UpdateScaleFactor(odom_ptr);
-    UpdateAlt(frame);
-  }
+//  if(odom_ptr != NULL){
+//    orb_slam_->TrackMonocularAlt(cv_in_ptr->image,cv_in_ptr->header.stamp.toSec(), odom_ptr);
+//    // double s = UpdateScaleFactor(odom_ptr);
+//    UpdateAlt(frame);
+//  }
   frame++;
 }
 

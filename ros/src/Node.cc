@@ -61,9 +61,9 @@ void Node::Init () {
     pose_publisher_ = node_handle_.advertise<geometry_msgs::PoseStamped> (name_of_node_+"/pose", 1);
   }
 
-  //* 
+  //*
   //frame_cntr = 0;
-  object_detection_enabled = true; // Switch between normal/object-detection mode 
+  object_detection_enabled = false; // Switch between normal/object-detection mode
 
   test_str_= getTestStr(test_id_);
   obj_cntr_ = 0;
@@ -71,12 +71,12 @@ void Node::Init () {
   load_file_ = true;
   write_file_ = true;
   filename_ = drone_name_param_+ "_object_detection_"+test_str_+".csv";
-  filepath_ = "/home/victor/amaius_scripts/output_files/" + filename_;
+  filepath_ = "/home/luser/tmp/output_files/" + filename_;
   outfilename_ = drone_name_param_ + "_bounding_volumes_XX.csv";
   outpath_ = "/home/victor/Desktop/amaius_scripts/output_files/" + outfilename_;
-  
+
   cout << filepath_ << std::endl;
-  
+
 
   if(object_detection_enabled){ //* Get object detection data
     if(load_file_){
@@ -139,15 +139,15 @@ void Node::UpdateAlt(unsigned int frame_cntr) {
           if(dset_obj_.at(obj_cntr_).at(6) == dset_obj_.at(obj_cntr_ + 1).at(6)){
             multiple_objects_ = true;
           }
-          obj_cntr_ ++;  
+          obj_cntr_ ++;
         }
         object_detection_ = true;
       }
-    } while(multiple_objects_); 
+    } while(multiple_objects_);
   }
   //
   if(object_detection_enabled){
-    PublishRenderedImage (orb_slam_->DrawCurrentFrameAlt(object_detection_, det_obj_, bvol));  
+//    PublishRenderedImage (orb_slam_->DrawCurrentFrameAlt(object_detection_, det_obj_, bvol));
   }
   else{
     PublishRenderedImage (orb_slam_->DrawCurrentFrame());
@@ -172,7 +172,7 @@ void Node::UpdateAlt(unsigned int frame_cntr) {
 
 
 double Node::UpdateScaleFactor (const nav_msgs::Odometry::ConstPtr& odom) {
-  // Method deprecated 
+  // Method deprecated
   double s, d = -1., d_e = -1.;
   current_frame_time_ = ros::Time::now();
   curr_position = orb_slam_->GetCurrentPosition();
@@ -181,7 +181,7 @@ double Node::UpdateScaleFactor (const nav_msgs::Odometry::ConstPtr& odom) {
     prev_position = curr_position;
     past_frame_time_ = current_frame_time_;
   } else {
-    
+
     if (!curr_position.empty()) {
       ros::Duration time_diff = current_frame_time_- past_frame_time_;
       double dt = time_diff.toSec();
@@ -191,7 +191,7 @@ double Node::UpdateScaleFactor (const nav_msgs::Odometry::ConstPtr& odom) {
       double dy = odom->twist.twist.linear.y * dt;
       double dz = odom->twist.twist.linear.z * dt;
       d = sqrt(pow(dx, 2) + pow(dy, 2) + pow(dz, 2));
-      
+
       if (curr_position.rows == prev_position.rows) {
         // Compute displacement between current and previous pose
         cv::Mat pose_diff;
@@ -203,7 +203,7 @@ double Node::UpdateScaleFactor (const nav_msgs::Odometry::ConstPtr& odom) {
         // cout << "dx_e: " << dx_e << "dy_e: " << dy_e << "dz_e: " << dz_e << endl;
         d_e = sqrt(pow(dx_e, 2) + pow(dy_e, 2) + pow(dz_e, 2));
       }
-      
+
       if (d > 1e-5 && d_e > 1e-5){
         s = d/d_e;
       } else {
@@ -216,8 +216,8 @@ double Node::UpdateScaleFactor (const nav_msgs::Odometry::ConstPtr& odom) {
       past_frame_time_ = current_frame_time_;
     }
   }
-  
-  
+
+
   return s;
 }
 
@@ -263,11 +263,11 @@ std::vector< std::vector<double> > Node::ReadDB(std::string filename){
 std::vector<double> Node::GetBoundingBox(std::vector<double> det){
   std::vector<double> bbox;
   double scaleU, scaleV;
-  if(drone_name_param_=='tello'){
+  if(drone_name_param_=="tello"){
     scaleU = 960./1280;
     scaleV = 720./960;
   }
-  if(drone_name_param_=='bebop'){
+  if(drone_name_param_=="bebop"){
   scaleU = 856./1280; //960./856;
   scaleV = 480./960; //720./480;
   }
@@ -487,7 +487,7 @@ sensor_msgs::PointCloud2 Node::TrackedMapPointsToPointCloud (std::vector<ORB_SLA
 void Node::PublishMapPoints (std::vector<ORB_SLAM2::MapPoint*> map_points) {
   if(!map_points.empty()){
     sensor_msgs::PointCloud2 cloud = MapPointsToPointCloud (map_points);
-    map_points_publisher_.publish (cloud);  
+    map_points_publisher_.publish (cloud);
   }
 }
 
